@@ -1,0 +1,47 @@
+Sub ImportDataClick()
+
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+    Dim FileToOpen As Variant
+    Dim FileCnt As Byte
+    Dim SelectedBook As Workbook
+    Dim orray As Variant
+    
+    'Multiselect files
+    FileToOpen = Application.GetOpenFilename(Filefilter:="Excel Files(*.xlsx),*.xlsx", Title:="Select Workbook to Import", MultiSelect:=True)
+    
+    If IsArray(FileToOpen) Then
+        For FileCnt = 1 To UBound(FileToOpen)
+            Set SelectedBook = Workbooks.Open(Filename:=FileToOpen(FileCnt))
+            
+            Sheets(1).Select
+            orray = Sheets(1).Cells(1, 1).CurrentRegion.Offset(1, 0)
+            ThisWorkbook.Activate
+            Sheets("Data").Select
+            Range("A" & Rows.Count).End(xlUp).Offset(1, 0).Resize(UBound(orray), UBound(orray, 2)) = orray
+            
+            SelectedBook.Close
+        Next FileCnt
+    
+    'Delete blank rows
+    ActiveSheet.ListObjects("Table2").Range.AutoFilter Field:=2, Criteria1:="="
+    ActiveSheet.ListObjects("Table2").DataBodyRange.SpecialCells(xlCellTypeVisible).Rows.Delete
+    
+    ActiveSheet.ListObjects("Table2").Range.AutoFilter Field:=2
+    
+    'Refresh
+    Sheets("Pivot").Select
+    Range("AL4").Select
+    ActiveSheet.PivotTables("PivotTable8").PivotCache.Refresh
+    Sheets("Dashboard").Select
+    
+Sheets("Dashboard").Select
+MsgBox "Succesfully imported data", vbOKOnly, "Well Done!"
+    
+End If
+
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+
+End Sub
